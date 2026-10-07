@@ -40,6 +40,7 @@ tpm2b!(Tpm2bSymKey, MAX_SYM_KEY_BYTES);
 tpm2b!(Tpm2bData, MAX_DATA_SIZE);
 tpm2b!(Tpm2bTimeout, 8);
 tpm2b!(Tpm2bIv, 16);
+tpm2b!(Tpm2bIdObject, { 2 * (MAX_DIGEST_SIZE + 2) });
 
 tpm2b_struct! {
     #[derive(Debug, PartialEq, Eq, Clone, Default)]
@@ -83,13 +84,6 @@ tpm2b_struct! {
     wire: Tpm2bNvPublicWire,
     Tpm2bNvPublic,
     TpmsNvPublic
-}
-
-tpm2b_struct! {
-    #[derive(Debug, PartialEq, Eq, Clone, Default)]
-    wire: Tpm2bIdObjectWire,
-    Tpm2bIdObject,
-    TpmsIdObject
 }
 
 tpm2b_struct! {
