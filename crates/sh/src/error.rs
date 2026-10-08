@@ -25,6 +25,6 @@ pub fn device_err(err: TpmDeviceError) -> anyhow::Error {
         TpmRcBase::AuthMissing => anyhow!("authentication missing"),
         TpmRcBase::Lockout => anyhow!("dictionary attack lockout is active"),
         TpmRcBase::PolicyFail => anyhow!("policy denied"),
-        _ => anyhow!("device: {}", TpmDeviceError::TpmRc(rc)),
+        _ => anyhow!("device: {rc} (0x{:08x})", rc.value()),
     }
 }
