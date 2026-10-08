@@ -1698,7 +1698,7 @@ tpm_struct! {
     kind: Command,
     name: TpmPolicyAcSendSelectCommand,
     cc: TpmCc::PolicyAcSendSelect,
-    handles: 3,
+    handles: 1,
     parameters: {
         pub object_name: Tpm2bName,
         pub auth_handle_name: Tpm2bName,

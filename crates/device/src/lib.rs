@@ -1222,7 +1222,7 @@ impl TpmPolicySession {
                 TpmCommand::PolicySigned(cmd) => cmd.handles[1] = session_handle,
                 TpmCommand::PolicyNv(cmd) => cmd.handles[2] = session_handle,
                 TpmCommand::PolicyAuthorizeNv(cmd) => cmd.handles[2] = session_handle,
-                TpmCommand::PolicyAcSendSelect(cmd) => cmd.handles[2] = session_handle,
+                TpmCommand::PolicyAcSendSelect(cmd) => cmd.handles[0] = session_handle,
                 _ => {
                     return Err(TpmDeviceError::InvalidCc(command_body.cc()));
                 }
