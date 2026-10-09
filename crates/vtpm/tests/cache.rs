@@ -305,7 +305,7 @@ mod tests {
         let mut cache = VtpmCache::new(cache_path, HashMap::new()).unwrap();
 
         let deleted = cache.remove(TpmUint32::new(0x8000_0000)).unwrap();
-        assert!(deleted.is_empty(),);
+        assert_eq!(deleted, [] as [TpmHandle; 0]);
         assert!(cache.key_iter().next().is_none(),);
     }
 

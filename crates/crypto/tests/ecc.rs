@@ -20,5 +20,5 @@ fn ecc_from_der_returns_bounded_sensitive() {
     let (ext_key, private) = TpmEccExternalKey::from_der(&der).expect("from_der");
 
     assert_eq!(ext_key.curve(), TpmEllipticCurve::NistP256);
-    assert!(!private.as_ref().is_empty());
+    assert_ne!(private.as_ref(), []);
 }

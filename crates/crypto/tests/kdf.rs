@@ -177,7 +177,7 @@ fn kdfa_zero_bit_output_is_empty() {
         .kdfa_into(b"key", b"LBL", b"A", b"B", 0, &mut output)
         .expect("kdfa_into");
 
-    assert!(actual.is_empty());
+    assert_eq!(actual, [] as [u8; 0]);
     assert_eq!(len, 0);
     assert_eq!(output, [0xa5; 4]);
 }
@@ -274,7 +274,7 @@ fn kdfe_zero_bit_output_is_empty() {
         .kdfe_into(b"Z", b"LBL", b"A", b"B", 0, &mut output)
         .expect("kdfe_into");
 
-    assert!(actual.is_empty());
+    assert_eq!(actual, [] as [u8; 0]);
     assert_eq!(len, 0);
     assert_eq!(output, [0xa5; 4]);
 }
