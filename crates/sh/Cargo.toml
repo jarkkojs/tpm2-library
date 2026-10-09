@@ -18,7 +18,7 @@ path = "src/main.rs"
 anyhow = "1.0"
 argh = { version = "0.1", default-features = false, features = ["help"] }
 ctrlc = "3.4"
-directories = "5.0"
+directories = "6.0"
 env_logger = { version = "0.11", default-features = false }
 hex = "0.4"
 indicatif = { version = "0.17", default-features = false }
