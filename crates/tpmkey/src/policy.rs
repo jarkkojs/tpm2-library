@@ -128,7 +128,7 @@ impl From<&TpmKeyPolicyCommand> for TpmKeyCommandAsn1 {
     fn from(c: &TpmKeyPolicyCommand) -> Self {
         Self {
             command_code: c.cc as u32,
-            command_policy: rasn::types::OctetString::copy_from_slice(&c.body),
+            command_policy: rasn::types::OctetString::from_slice(&c.body),
         }
     }
 }

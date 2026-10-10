@@ -443,7 +443,7 @@ impl TpmKeyFile {
         let secret = if self.secret.is_empty() {
             None
         } else {
-            Some(OctetString::copy_from_slice(&self.secret))
+            Some(OctetString::from_slice(&self.secret))
         };
 
         TpmKeyAsn1 {
@@ -455,8 +455,8 @@ impl TpmKeyFile {
             description: self.description.as_deref().map(Utf8String::from),
             rsa_parent,
             parent: self.parent.into(),
-            pubkey: OctetString::copy_from_slice(&self.public),
-            privkey: OctetString::copy_from_slice(&self.private),
+            pubkey: OctetString::from_slice(&self.public),
+            privkey: OctetString::from_slice(&self.private),
         }
     }
 
@@ -624,7 +624,7 @@ mod tests {
 
         let bad_cmd = TpmKeyCommandAsn1 {
             command_code: TpmCc::SelfTest as u32,
-            command_policy: OctetString::copy_from_slice(&[]),
+            command_policy: OctetString::from_slice(&[]),
         };
 
         let asn1 = TpmKeyAsn1 {
@@ -636,8 +636,8 @@ mod tests {
             description: None,
             rsa_parent: None,
             parent: 0,
-            pubkey: OctetString::copy_from_slice(&pub_bytes),
-            privkey: OctetString::copy_from_slice(&priv_bytes),
+            pubkey: OctetString::from_slice(&pub_bytes),
+            privkey: OctetString::from_slice(&priv_bytes),
         };
 
         let der = rasn::der::encode(&asn1).unwrap();
@@ -656,7 +656,7 @@ mod tests {
         let invalid_cc_val = 0xFFFF_FFFFu32;
         let bad_cmd = TpmKeyCommandAsn1 {
             command_code: invalid_cc_val,
-            command_policy: OctetString::copy_from_slice(&[]),
+            command_policy: OctetString::from_slice(&[]),
         };
 
         let asn1 = TpmKeyAsn1 {
@@ -668,8 +668,8 @@ mod tests {
             description: None,
             rsa_parent: None,
             parent: 0,
-            pubkey: OctetString::copy_from_slice(&pub_bytes),
-            privkey: OctetString::copy_from_slice(&priv_bytes),
+            pubkey: OctetString::from_slice(&pub_bytes),
+            privkey: OctetString::from_slice(&priv_bytes),
         };
 
         let der = rasn::der::encode(&asn1).unwrap();
@@ -694,8 +694,8 @@ mod tests {
             description: None,
             rsa_parent: None,
             parent: 0,
-            pubkey: OctetString::copy_from_slice(&pub_bytes),
-            privkey: OctetString::copy_from_slice(&priv_bytes),
+            pubkey: OctetString::from_slice(&pub_bytes),
+            privkey: OctetString::from_slice(&priv_bytes),
         };
 
         let der = rasn::der::encode(&asn1).unwrap();
@@ -715,8 +715,8 @@ mod tests {
             description: None,
             rsa_parent: None,
             parent: 0,
-            pubkey: OctetString::copy_from_slice(&[0]),
-            privkey: OctetString::copy_from_slice(&priv_bytes),
+            pubkey: OctetString::from_slice(&[0]),
+            privkey: OctetString::from_slice(&priv_bytes),
         };
 
         let der = rasn::der::encode(&asn1).unwrap();
@@ -739,8 +739,8 @@ mod tests {
             description: None,
             rsa_parent: None,
             parent: 0,
-            pubkey: OctetString::copy_from_slice(&pub_bytes),
-            privkey: OctetString::copy_from_slice(&priv_bytes),
+            pubkey: OctetString::from_slice(&pub_bytes),
+            privkey: OctetString::from_slice(&priv_bytes),
         };
 
         let der = rasn::der::encode(&asn1).unwrap();
@@ -762,8 +762,8 @@ mod tests {
             description: None,
             rsa_parent: None,
             parent: 0,
-            pubkey: OctetString::copy_from_slice(&pub_bytes),
-            privkey: OctetString::copy_from_slice(&[0, 2, 0]),
+            pubkey: OctetString::from_slice(&pub_bytes),
+            privkey: OctetString::from_slice(&[0, 2, 0]),
         };
 
         let der = rasn::der::encode(&asn1).unwrap();
