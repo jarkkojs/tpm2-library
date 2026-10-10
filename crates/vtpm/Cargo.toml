@@ -17,5 +17,5 @@ tpm2-crypto.workspace = true
 tpm2-protocol.workspace = true
 
 [dev-dependencies]
-rstest = "0.18"
+rstest = "0.26"
 tempfile = "3.10"
