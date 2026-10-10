@@ -12,6 +12,6 @@ version.workspace = true
 
 [dependencies]
 pem = "3.0"
-rasn = "0.26"
+rasn = "0.29"
 strum = { version = "0.28", features = ["derive"] }
 tpm2-protocol.workspace = true
