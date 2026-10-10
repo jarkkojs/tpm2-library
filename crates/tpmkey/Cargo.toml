@@ -11,7 +11,7 @@ rust-version.workspace = true
 version.workspace = true
 
 [dependencies]
-pem = "3.0"
+pem = "4.0"
 rasn = "0.26"
 strum = { version = "0.28", features = ["derive"] }
 tpm2-protocol.workspace = true
