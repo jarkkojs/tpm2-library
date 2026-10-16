@@ -11,7 +11,7 @@ use nix::{
 use std::{
     fs::{File, OpenOptions},
     io::{Read, Write},
-    os::fd::{AsFd, AsRawFd},
+    os::fd::AsFd,
     path::{Path, PathBuf},
     time::{Duration, Instant},
 };
@@ -173,7 +173,7 @@ impl TpmPosixDeviceBuilder {
             .open(&self.path)
             .map_err(TpmDeviceError::Io)?;
 
-        let fd = file.as_raw_fd();
+        let fd = file.as_fd();
         let flags = fcntl::fcntl(fd, fcntl::FcntlArg::F_GETFL)?;
         let mut oflags = fcntl::OFlag::from_bits_truncate(flags);
         oflags.insert(fcntl::OFlag::O_NONBLOCK);
