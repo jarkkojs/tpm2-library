@@ -44,4 +44,4 @@ harness = true
 
 [dev-dependencies]
 hex = "0.4"
-rstest = "0.26"
+rstest = "0.27"
