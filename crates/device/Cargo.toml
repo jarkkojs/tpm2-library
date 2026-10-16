@@ -14,7 +14,7 @@ version.workspace = true
 hex = "0.4"
 log = "0.4"
 nix = { version = "0.29", features = ["fs", "poll"] }
-rand = "0.8"
+rand = "0.10"
 strum = { version = "0.28", features = ["derive"] }
 tpm2-crypto.workspace = true
 tpm2-protocol.workspace = true
