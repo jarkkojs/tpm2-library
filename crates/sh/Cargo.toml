@@ -38,7 +38,7 @@ tpm2-vtpm.workspace = true
 
 [dev-dependencies]
 assert_cmd = "2.0"
-duct = "0.13"
+duct = "1.1"
 predicates = "3.0"
 rstest = "0.26"
 tempfile = "3.10"
