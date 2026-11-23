@@ -1404,6 +1404,7 @@ name = "tpm2-tpmkey"
 version = "1.2.3"
 dependencies = [
  "pem",
+ "proptest",
  "rasn",
  "strum",
  "tpm2-protocol",
