@@ -337,6 +337,8 @@ impl TpmKeyFile {
     /// [`UnexpectedSecret`](TpmKeyError::UnexpectedSecret), or
     /// [`InvalidSecret`](TpmKeyError::InvalidSecret) when `secret` does not
     /// satisfy the constraints for this key type.
+    /// Returns [`InvalidCc`](TpmKeyError::InvalidCc) when a policy item uses a
+    /// non-policy TPM command code.
     pub fn to_pem(&self) -> Result<String, TpmKeyError> {
         let der = self.to_der()?;
         let pem = Pem::new("TSS2 PRIVATE KEY", der);
@@ -385,11 +387,24 @@ impl TpmKeyFile {
     /// [`UnexpectedSecret`](TpmKeyError::UnexpectedSecret), or
     /// [`InvalidSecret`](TpmKeyError::InvalidSecret) when `secret` does not
     /// satisfy the constraints for this key type.
+    /// Returns [`InvalidCc`](TpmKeyError::InvalidCc) when a policy item uses a
+    /// non-policy TPM command code.
     pub fn to_der(&self) -> Result<Vec<u8>, TpmKeyError> {
         tpm_validate_secret(self.kind, &self.secret)?;
 
         if self.rsa_parent && (self.parent.value() >> 24) != 0x40 {
             return Err(TpmKeyError::InvalidPolicy);
+        }
+
+        let branches = self.auth_policy.iter().flatten();
+        for command in self
+            .policy
+            .iter()
+            .chain(branches.flat_map(TpmKeyAuthPolicy::policy))
+        {
+            if !tpm_is_policy_cc(command.cc()) {
+                return Err(TpmKeyError::InvalidCc(command.cc() as u32));
+            }
         }
 
         let asn1 = self.to_asn1();

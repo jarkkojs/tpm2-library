@@ -84,36 +84,7 @@ impl TryFrom<&TpmKeyCommandAsn1> for TpmKeyPolicyCommand {
         let cc = TpmCc::try_from(val.command_code)
             .map_err(|_| TpmKeyError::InvalidCc(val.command_code))?;
 
-        let is_policy = matches!(
-            cc,
-            TpmCc::PolicyNv
-                | TpmCc::PolicySecret
-                | TpmCc::PolicySigned
-                | TpmCc::PolicyAuthorize
-                | TpmCc::PolicyAuthValue
-                | TpmCc::PolicyCommandCode
-                | TpmCc::PolicyCounterTimer
-                | TpmCc::PolicyCpHash
-                | TpmCc::PolicyLocality
-                | TpmCc::PolicyNameHash
-                | TpmCc::PolicyOr
-                | TpmCc::PolicyTicket
-                | TpmCc::PolicyPcr
-                | TpmCc::PolicyRestart
-                | TpmCc::PolicyPhysicalPresence
-                | TpmCc::PolicyDuplicationSelect
-                | TpmCc::PolicyGetDigest
-                | TpmCc::PolicyPassword
-                | TpmCc::PolicyNvWritten
-                | TpmCc::PolicyTemplate
-                | TpmCc::PolicyAuthorizeNv
-                | TpmCc::PolicyAcSendSelect
-                | TpmCc::PolicyCapability
-                | TpmCc::PolicyParameters
-                | TpmCc::PolicyTransportSpdm
-        );
-
-        if !is_policy {
+        if !tpm_is_policy_cc(cc) {
             return Err(TpmKeyError::InvalidCc(val.command_code));
         }
 
@@ -122,6 +93,38 @@ impl TryFrom<&TpmKeyCommandAsn1> for TpmKeyPolicyCommand {
             body: val.command_policy.as_ref().to_vec(),
         })
     }
+}
+
+/// Returns `true` when `cc` is a policy command allowed in a TPMKEY policy.
+pub(crate) fn tpm_is_policy_cc(cc: TpmCc) -> bool {
+    matches!(
+        cc,
+        TpmCc::PolicyNv
+            | TpmCc::PolicySecret
+            | TpmCc::PolicySigned
+            | TpmCc::PolicyAuthorize
+            | TpmCc::PolicyAuthValue
+            | TpmCc::PolicyCommandCode
+            | TpmCc::PolicyCounterTimer
+            | TpmCc::PolicyCpHash
+            | TpmCc::PolicyLocality
+            | TpmCc::PolicyNameHash
+            | TpmCc::PolicyOr
+            | TpmCc::PolicyTicket
+            | TpmCc::PolicyPcr
+            | TpmCc::PolicyRestart
+            | TpmCc::PolicyPhysicalPresence
+            | TpmCc::PolicyDuplicationSelect
+            | TpmCc::PolicyGetDigest
+            | TpmCc::PolicyPassword
+            | TpmCc::PolicyNvWritten
+            | TpmCc::PolicyTemplate
+            | TpmCc::PolicyAuthorizeNv
+            | TpmCc::PolicyAcSendSelect
+            | TpmCc::PolicyCapability
+            | TpmCc::PolicyParameters
+            | TpmCc::PolicyTransportSpdm
+    )
 }
 
 impl From<&TpmKeyPolicyCommand> for TpmKeyCommandAsn1 {
