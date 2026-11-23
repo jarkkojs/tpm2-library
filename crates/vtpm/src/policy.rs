@@ -282,7 +282,7 @@ pub(crate) fn vtpm_marshal_policy_list(
 }
 
 /// Maximum number of policy commands accepted in a cache record policy list.
-const MAX_POLICY_COUNT: usize = 16;
+pub(crate) const MAX_POLICY_COUNT: usize = 16;
 
 #[allow(clippy::type_complexity)]
 pub(crate) fn vtpm_unmarshal_policy_list(

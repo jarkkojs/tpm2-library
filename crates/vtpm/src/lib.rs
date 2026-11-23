@@ -149,6 +149,21 @@ impl VtpmKey {
         })
     }
 
+    /// Rejects records that [`VtpmKey::load`] would refuse, so that a cached key
+    /// is never silently discarded on the next start.
+    fn check_limits(&self) -> Result<(), VtpmError> {
+        if self.policy.len() > MAX_POLICY_COUNT {
+            return Err(VtpmError::TooManyPolicies(self.policy.len()));
+        }
+
+        let len = self.serialized_len();
+        if len > MAX_RECORD_SIZE {
+            return Err(VtpmError::RecordTooLarge(len));
+        }
+
+        Ok(())
+    }
+
     /// Returns the exact serialized length of this cache record.
     fn serialized_len(&self) -> usize {
         TpmSized::len(&self.version)
@@ -542,6 +557,11 @@ impl<'a> VtpmCache<'a> {
     ///
     /// Returns [`NoHandles`](crate::VtpmError::NoHandles) when no free VTPM
     /// handle slot is found.
+    /// Returns [`TooManyPolicies`](crate::VtpmError::TooManyPolicies) or
+    /// [`RecordTooLarge`](crate::VtpmError::RecordTooLarge) when the record
+    /// would exceed the limits enforced on load.
+    /// Returns [`OperationFailed`](crate::VtpmError::OperationFailed) if name
+    /// calculation fails.
     pub fn save_transient(
         &mut self,
         context: TpmsContext,
@@ -549,6 +569,17 @@ impl<'a> VtpmCache<'a> {
         parent_public: &TpmtPublic,
         policy: Option<&[Box<dyn VtpmPolicyCommand>]>,
     ) -> Result<TpmHandle, VtpmError> {
+        let mut key = VtpmKey {
+            version: TpmUint32::new(VERSION),
+            handle: TpmUint32::new(TRANSIENT_START),
+            public: public.clone(),
+            parent: parent_public.clone(),
+            context,
+            policy: policy.map(<[_]>::to_vec).unwrap_or_default(),
+        };
+        key.check_limits()?;
+        let name = tpm_make_name(&key.public).map_err(|_| VtpmError::OperationFailed)?;
+
         for i in 0..TRANSIENT_COUNT {
             let virtual_handle = self.next_virtual_handle.wrapping_add(i);
 
@@ -559,17 +590,7 @@ impl<'a> VtpmCache<'a> {
             };
 
             if let Entry::Vacant(e) = self.contexts.entry(virtual_handle) {
-                let key = VtpmKey {
-                    version: TpmUint32::new(VERSION),
-                    handle: TpmUint32::new(virtual_handle),
-                    public: public.clone(),
-                    parent: parent_public.clone(),
-                    context,
-                    policy: policy.map(<[_]>::to_vec).unwrap_or_default(),
-                };
-
-                let name = tpm_make_name(&key.public).map_err(|_| VtpmError::OperationFailed)?;
-
+                key.handle = TpmUint32::new(virtual_handle);
                 e.insert(key);
 
                 self.publish_name(virtual_handle, name);
@@ -597,6 +618,9 @@ impl<'a> VtpmCache<'a> {
     ///
     /// Returns [`InvalidHandleType`](crate::VtpmError::InvalidHandleType)
     /// if `handle` is not a persistent handle.
+    /// Returns [`TooManyPolicies`](crate::VtpmError::TooManyPolicies) or
+    /// [`RecordTooLarge`](crate::VtpmError::RecordTooLarge) when the record
+    /// would exceed the limits enforced on load.
     /// Returns [`OperationFailed`](crate::VtpmError::OperationFailed) if name
     /// calculation fails.
     pub fn save_persistent(
@@ -624,6 +648,7 @@ impl<'a> VtpmCache<'a> {
             },
             policy: policy.map(<[_]>::to_vec).unwrap_or_default(),
         };
+        key.check_limits()?;
 
         let name = tpm_make_name(&key.public).map_err(|_| VtpmError::OperationFailed)?;
 
