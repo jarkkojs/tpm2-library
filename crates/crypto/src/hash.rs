@@ -309,6 +309,9 @@ impl TpmHash {
 
     /// Implements the `KDFe` key derivation function from SP 800-56A for ECDH.
     ///
+    /// When `key_bits` is not a multiple of eight, the excess high-order bits
+    /// of the first output octet are cleared.
+    ///
     /// # Errors
     ///
     /// Returns [`InvalidHash`](crate::TpmCryptoError::InvalidHash) when the
@@ -383,6 +386,12 @@ impl TpmHash {
             offset += to_take;
 
             counter += 1;
+        }
+
+        // As in the TCG reference implementation, the excess high-order bits
+        // of the first octet are cleared when `key_bits` is not byte-aligned.
+        if !key_bits.is_multiple_of(8) {
+            output[0] &= (1u8 << (key_bits % 8)) - 1;
         }
 
         Ok(key_bytes)
