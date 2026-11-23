@@ -1415,7 +1415,7 @@ name = "tpm2-vtpm"
 version = "1.2.3"
 dependencies = [
  "log",
- "rstest",
+ "proptest",
  "strum",
  "tempfile",
  "tpm2-crypto",
