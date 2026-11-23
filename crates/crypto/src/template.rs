@@ -333,6 +333,9 @@ fn parse_rsa(suffix: &str) -> Result<TpmPublicTemplate, TpmCryptoError> {
     let key_bits: u16 = bits_str
         .parse()
         .map_err(|_| TpmCryptoError::InvalidObjectType)?;
+    if key_bits == 0 {
+        return Err(TpmCryptoError::InvalidKeyBits(0));
+    }
     let name_alg =
         TpmHash::from_str(name_alg_str).map_err(|_| TpmCryptoError::InvalidObjectType)?;
     let (scheme, usage) = parse_asym_form(scheme_str)?;
