@@ -250,11 +250,56 @@ impl TpmPolicyExpression {
         let mut command_list: Vec<(TpmCommand, TpmAuthCommands)> = Vec::new();
         let mut software_session = TpmPolicySession::new(session_hash_alg)?;
 
-        let final_digest = self.compile_walk(&mut command_list, &mut software_session, context)?;
+        let expression = self.normalize();
+        let final_digest =
+            expression.compile_walk(&mut command_list, &mut software_session, context)?;
         Ok(TpmCompiledPolicy {
             commands: command_list,
             digest: final_digest,
         })
+    }
+
+    /// Rewrites the expression so that an OR never follows other terms in an
+    /// AND chain.
+    ///
+    /// `TPM2_PolicyRestart` and `TPM2_PolicyOR` reset the policy digest, which
+    /// would silently discard every assertion compiled before the OR. A chain
+    /// `p and (b1 or b2) and s` is therefore distributed into
+    /// `((p and b1) or (p and b2)) and s`.
+    fn normalize(&self) -> TpmPolicyExpression {
+        match self {
+            TpmPolicyExpression::And(terms) => {
+                let mut chain: Vec<TpmPolicyExpression> = Vec::new();
+                let flattened = terms.iter().flat_map(|term| match term.normalize() {
+                    TpmPolicyExpression::And(inner) => inner,
+                    other => vec![other],
+                });
+
+                for term in flattened {
+                    match term {
+                        TpmPolicyExpression::Or(branches) if !chain.is_empty() => {
+                            let prefix = std::mem::take(&mut chain);
+                            let branches = branches
+                                .into_iter()
+                                .map(|branch| {
+                                    let mut terms = prefix.clone();
+                                    terms.push(branch);
+                                    TpmPolicyExpression::And(terms).normalize()
+                                })
+                                .collect();
+                            chain.push(TpmPolicyExpression::Or(branches));
+                        }
+                        term => chain.push(term),
+                    }
+                }
+
+                build_and_branch(chain)
+            }
+            TpmPolicyExpression::Or(branches) => {
+                TpmPolicyExpression::Or(branches.iter().map(Self::normalize).collect())
+            }
+            expr => expr.clone(),
+        }
     }
 
     fn compile_walk<'a>(
