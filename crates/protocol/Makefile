@@ -16,15 +16,15 @@ test: $(RETURN_CODE) $(MESSAGE)
 	@./$(MESSAGE)
 	@./$(RETURN_CODE)
 
-$(MESSAGE): tests/message.rs tests/message.txt $(TARGET)
+$(MESSAGE): tests/message.rs tests/common/random.rs $(TARGET)
 	@echo "Compiling test: message..."
 	@rustc tests/message.rs --crate-name message_return_code --edition=2024 --extern tpm2_protocol=$(TARGET) -L $(TARGET_DIR) -o $(MESSAGE)
 
-$(RETURN_CODE): $(TARGET) tests/return_code.rs
+$(RETURN_CODE): tests/return_code.rs tests/common/random.rs $(TARGET)
 	@echo "Compiling test: return_code..."
 	@rustc tests/return_code.rs --crate-name return_code --edition=2024 --extern tpm2_protocol=$(TARGET) -L $(TARGET_DIR) -o $(RETURN_CODE)
 
-$(TARGET): $(wildcard src/*.rs)
+$(TARGET): $(shell find src -name "*.rs")
 	@echo "Compiling tpm2-protocol..."
 	@mkdir -p $(TARGET_DIR)
 	@rustc --crate-type lib --crate-name tpm2_protocol src/lib.rs --edition=2024 --out-dir $(TARGET_DIR)
