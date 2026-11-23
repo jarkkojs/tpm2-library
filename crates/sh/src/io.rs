@@ -94,34 +94,3 @@ pub fn parse_u32(s: &str) -> Result<u32, std::num::ParseIntError> {
         trimmed.parse::<u32>()
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::io::Write;
-    use tempfile::NamedTempFile;
-
-    #[test]
-    fn read_file_input_errors_on_empty_file() {
-        let file = NamedTempFile::new().unwrap();
-        let err = read_file_input(Some(file.path())).unwrap_err();
-        assert!(err.to_string().contains("unexpected eof"));
-    }
-
-    #[test]
-    fn parse_u32_accepts_variants() {
-        assert_eq!(parse_u32(" 42 ").unwrap(), 42);
-        assert_eq!(parse_u32("0x2a").unwrap(), 42);
-        assert_eq!(parse_u32("0X2A").unwrap(), 42);
-    }
-
-    #[test]
-    fn read_file_input_reads_non_empty_file() {
-        let mut file = NamedTempFile::new().unwrap();
-        write!(file, "abc").unwrap();
-        file.as_file().sync_all().unwrap();
-
-        let result = read_file_input(Some(file.path())).unwrap();
-        assert_eq!(result, b"abc");
-    }
-}

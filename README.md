@@ -33,7 +33,9 @@ make update
 make install
 ```
 
-`tpm2sh` integration tests need a TPM device and are not run by `make ci`.
+`tpm2sh` has no automated tests: it is tested in use against a real TPM. The
+library crates carry randomized property tests. Every test prints the seed of
+its population; set `TPM2_TEST_SEED` to rerun the same population.
 
 ## Versioning
 

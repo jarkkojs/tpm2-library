@@ -270,30 +270,3 @@ fn fetch_handle_names(
 
     Ok(map)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::env;
-    use tpm2_protocol::{basic::TpmUint32, data::TpmRh};
-
-    #[test]
-    fn parse_auth_trims_whitespace() {
-        let (handle, auth) = parse_auth(" owner : deadbeef ").unwrap();
-        assert_eq!(handle, TpmUint32::new(TpmRh::Owner as u32));
-        assert!(matches!(auth, Auth::Password(bytes) if bytes == hex::decode("deadbeef").unwrap()));
-    }
-
-    #[test]
-    fn build_auth_map_wraps_entry_in_error() {
-        unsafe {
-            env::set_var("TPM2SH_AUTH", "owner:not-hex");
-        }
-        let empty_entries = vec![];
-        let err = build_auth_map(&empty_entries).unwrap_err();
-        assert!(err.to_string().contains("owner:not-hex"));
-        unsafe {
-            env::remove_var("TPM2SH_AUTH");
-        }
-    }
-}

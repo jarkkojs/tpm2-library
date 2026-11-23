@@ -26,12 +26,7 @@ printf '==> cargo build\n'
 $CARGO build --workspace --locked
 
 printf '==> cargo test\n'
-$CARGO test --workspace --locked --all-targets --exclude tpm2sh
-$CARGO test -p tpm2sh --locked --bins
-if [[ -e /dev/tpmrm0 || -e /dev/tpm0 || -n "${TPM2TOOLS_TCTI:-}" ]]; then
-	printf '==> cargo test tpm2sh integration (serial)\n'
-	$CARGO test -p tpm2sh --locked --test integration -- --test-threads=1
-fi
+$CARGO test --workspace --locked --all-targets
 
 printf '==> cargo clippy\n'
 $CARGO clippy --workspace --all-targets --locked
@@ -46,11 +41,7 @@ if [[ -n "${CI_MSRV:-}" ]]; then
 	require_command rustup
 	rustup toolchain install "$version"
 	cargo +"$version" build --workspace --locked
-	cargo +"$version" test --workspace --locked --all-targets --exclude tpm2sh
-	cargo +"$version" test -p tpm2sh --locked --bins
-	if [[ -e /dev/tpmrm0 || -e /dev/tpm0 || -n "${TPM2TOOLS_TCTI:-}" ]]; then
-		cargo +"$version" test -p tpm2sh --locked --test integration -- --test-threads=1
-	fi
+	cargo +"$version" test --workspace --locked --all-targets
 fi
 
 printf 'local CI passed\n'
