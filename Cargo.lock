@@ -1389,7 +1389,7 @@ name = "tpm2-policy-language"
 version = "1.2.3"
 dependencies = [
  "hex",
- "rstest",
+ "proptest",
  "strum",
  "tpm2-crypto",
  "tpm2-protocol",
