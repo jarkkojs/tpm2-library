@@ -197,7 +197,7 @@ impl TpmHash {
         signature: &[u8],
     ) -> Result<(), TpmCryptoError> {
         let expected = self.hmac(key, data_chunks)?;
-        if memcmp::eq(&expected, signature) {
+        if expected.len() == signature.len() && memcmp::eq(&expected, signature) {
             Ok(())
         } else {
             Err(TpmCryptoError::MacMismatch)
