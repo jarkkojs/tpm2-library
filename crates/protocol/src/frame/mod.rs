@@ -71,27 +71,28 @@ pub trait TpmUnmarshalBody: TpmHeader + Sized {
 }
 
 /// Reads exactly `N` handles and rejects leftover bytes.
-pub(crate) fn unmarshal_handle_area<const N: usize>(
-    mut buffer: &[u8],
-) -> TpmResult<[TpmHandle; N]> {
+pub(crate) fn unmarshal_handle_area<const N: usize>(start: &[u8]) -> TpmResult<[TpmHandle; N]> {
     let mut handles = [TpmHandle::new(0); N];
+    let mut buffer = start;
     for slot in &mut handles {
-        let (handle, tail) = TpmHandle::unmarshal(buffer)?;
+        let (handle, tail) =
+            TpmHandle::unmarshal(buffer).map_err(|e| e.rebase(start.len() - buffer.len()))?;
         *slot = handle;
         buffer = tail;
     }
-    ensure_consumed(buffer)?;
+    ensure_consumed(start, buffer)?;
     Ok(handles)
 }
 
-/// Rejects leftover bytes after an exact unmarshal.
-pub(crate) fn ensure_consumed(buffer: &[u8]) -> TpmResult<()> {
-    if buffer.is_empty() {
+/// Rejects leftover bytes after an exact unmarshal of `start`, where `rest` is
+/// the unconsumed tail of `start`.
+pub(crate) fn ensure_consumed(start: &[u8], rest: &[u8]) -> TpmResult<()> {
+    if rest.is_empty() {
         Ok(())
     } else {
         Err(TpmError::TrailingData {
-            offset: 0,
-            actual: buffer.len(),
+            offset: start.len() - rest.len(),
+            actual: rest.len(),
         })
     }
 }

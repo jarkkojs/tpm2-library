@@ -25,7 +25,7 @@ macro_rules! tpm_struct {
                         <$param_type as $crate::TpmUnmarshal>::unmarshal(parameters)
                             .map_err(|e| e.rebase(offset))?;
                 )*
-                $crate::frame::ensure_consumed(parameters)?;
+                $crate::frame::ensure_consumed(start, parameters)?;
                 Ok(Self {
                     handles,
                     $($param_field,)*
