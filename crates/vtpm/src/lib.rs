@@ -423,11 +423,12 @@ impl<'a> VtpmCache<'a> {
     /// `target_virtual_handle` does not exist in the cache.
     /// Returns [`ParentNotFound`](crate::VtpmError::ParentNotFound) when an
     /// intermediate parent cannot be found in the cache or as a persistent
-    /// handle.
+    /// handle, or when the cached parent links form a cycle.
     pub fn fetch_ancestors(&self, target_handle: TpmHandle) -> Result<Vec<TpmHandle>, VtpmError> {
         let mut current_virtual_handle = target_handle;
         let mut chain: VecDeque<TpmHandle> = VecDeque::new();
         let mut physical_primary: Option<TpmHandle> = None;
+        let mut visited: HashSet<u32> = HashSet::new();
 
         let ht = (target_handle.value() >> 24) as u8;
         if ht == TpmHt::Persistent as u8 {
@@ -439,6 +440,10 @@ impl<'a> VtpmCache<'a> {
         }
 
         loop {
+            if !visited.insert(current_virtual_handle.value()) {
+                return Err(VtpmError::ParentNotFound);
+            }
+
             let Some(key) = self.find_by_handle(current_virtual_handle) else {
                 return Err(VtpmError::HandleNotFound(current_virtual_handle));
             };
