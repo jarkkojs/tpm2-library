@@ -17,31 +17,5 @@ openssl = { version = "0.10" }
 strum = { version = "0.28", features = ["derive"] }
 tpm2-protocol.workspace = true
 
-[[test]]
-name = "hmac"
-path = "tests/hmac.rs"
-harness = true
-
-[[test]]
-name = "public"
-path = "tests/public.rs"
-harness = true
-
-[[test]]
-name = "ecc"
-path = "tests/ecc.rs"
-harness = true
-
-[[test]]
-name = "kdf"
-path = "tests/kdf.rs"
-harness = true
-
-[[test]]
-name = "rsa"
-path = "tests/rsa.rs"
-harness = true
-
 [dev-dependencies]
-hex = "0.4"
-rstest = "0.26"
+proptest = { version = "1.12", default-features = false, features = ["std"] }
