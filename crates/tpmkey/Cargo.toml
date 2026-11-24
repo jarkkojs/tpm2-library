@@ -2,7 +2,6 @@
 authors.workspace = true
 description = "TPM 2.0 key ASN.1 file reader and writer"
 edition.workspace = true
-homepage.workspace = true
 license = "MIT OR Apache-2.0"
 name = "tpm2-tpmkey"
 readme = "README.md"

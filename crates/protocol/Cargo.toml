@@ -2,7 +2,6 @@
 authors.workspace = true
 description = "TPM 2.0 marshaler/unmarshaler"
 edition.workspace = true
-homepage.workspace = true
 license = "MIT OR Apache-2.0"
 name = "tpm2-protocol"
 readme = "README.md"

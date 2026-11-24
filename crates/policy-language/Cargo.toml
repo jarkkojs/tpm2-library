@@ -2,7 +2,6 @@
 authors.workspace = true
 description = "TPM 2.0 policy language interpreter"
 edition.workspace = true
-homepage.workspace = true
 license = "MIT OR Apache-2.0"
 name = "tpm2-policy-language"
 readme = "README.md"

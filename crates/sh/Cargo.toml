@@ -2,7 +2,6 @@
 authors.workspace = true
 description = "TPM 2.0 command-line interface"
 edition.workspace = true
-homepage.workspace = true
 license = "GPL-3.0-or-later"
 name = "tpm2sh"
 readme = "README.md"

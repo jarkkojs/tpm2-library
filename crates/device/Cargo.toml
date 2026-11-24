@@ -2,7 +2,6 @@
 authors.workspace = true
 description = "TPM 2.0 device interface"
 edition.workspace = true
-homepage.workspace = true
 license = "MIT OR Apache-2.0"
 name = "tpm2-device"
 readme = "README.md"
