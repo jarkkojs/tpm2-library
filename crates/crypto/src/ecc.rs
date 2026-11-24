@@ -6,15 +6,12 @@
 
 use super::TpmPublicTemplate;
 use crate::{KDF_LABEL_DUPLICATE, TpmCryptoError, TpmExternalKey, TpmHash, TpmPublicAreaField};
-use num_bigint::BigUint;
-use num_traits::ops::bytes::ToBytes;
 use openssl::{
     bn::{BigNum, BigNumContext},
     derive::Deriver,
-    ec::{EcGroup, EcGroupRef, EcKey, EcPoint, EcPointRef, PointConversionForm},
+    ec::{EcGroup, EcGroupRef, EcKey, EcPointRef, PointConversionForm},
     nid::Nid,
     pkey::{PKey, Private},
-    rand::rand_bytes,
 };
 use strum::{Display, EnumString};
 use tpm2_protocol::{
@@ -309,23 +306,8 @@ impl TpmEccExternalKey {
             .map_err(TpmCryptoError::Crypto)?;
         let parent_public_key = PKey::from_ec_key(parent_key).map_err(TpmCryptoError::Crypto)?;
 
-        let mut order = BigNum::new().map_err(TpmCryptoError::Crypto)?;
-        group
-            .order(&mut order, &mut ctx)
-            .map_err(TpmCryptoError::Crypto)?;
-        let order_uint = BigUint::from_bytes_be(&order.to_vec());
-        let one = BigUint::from(1u8);
-
-        let priv_uint = gen_biguint_range(&one, &order_uint)?;
-        let priv_bn =
-            BigNum::from_slice(&priv_uint.to_be_bytes()).map_err(TpmCryptoError::Crypto)?;
-
-        let mut ephemeral_pub_point = EcPoint::new(&group).map_err(TpmCryptoError::Crypto)?;
-        ephemeral_pub_point
-            .mul_generator2(&group, &priv_bn, &mut ctx)
-            .map_err(TpmCryptoError::Crypto)?;
-        let ephemeral_key = EcKey::from_private_components(&group, &priv_bn, &ephemeral_pub_point)
-            .map_err(TpmCryptoError::Crypto)?;
+        let ephemeral_key = EcKey::generate(&group).map_err(TpmCryptoError::Crypto)?;
+        let ephemeral = tpm_make_point(ephemeral_key.public_key(), &group, &mut ctx, self.curve)?;
 
         let ephemeral_public_key =
             PKey::from_ec_key(ephemeral_key).map_err(TpmCryptoError::Crypto)?;
@@ -334,8 +316,6 @@ impl TpmEccExternalKey {
             .set_peer(&parent_public_key)
             .map_err(TpmCryptoError::Crypto)?;
         let z = deriver.derive_to_vec().map_err(TpmCryptoError::Crypto)?;
-
-        let ephemeral = tpm_make_point(&ephemeral_pub_point, &group, &mut ctx, self.curve)?;
 
         let seed_bits = name_alg.size() * 8;
         let context_u = ephemeral.x.as_ref();
@@ -394,35 +374,4 @@ fn tpm_make_point(
 fn ecc_coord_len(group: &EcGroupRef) -> Result<usize, TpmCryptoError> {
     let degree = group.degree();
     usize::try_from(degree.div_ceil(8)).map_err(|_| TpmCryptoError::InvalidEccGroupDegree(degree))
-}
-
-/// Samples a uniform [`BigUint`] in the half-open range `[low, high)` using
-/// rejection sampling over the most significant byte mask.
-///
-/// # Errors
-///
-/// Returns [`Crypto`](crate::TpmCryptoError::Crypto) when libcrypto fails.
-/// Returns [`InvalidRandomRange`](crate::TpmCryptoError::InvalidRandomRange)
-/// when `low >= high`.
-fn gen_biguint_range(low: &BigUint, high: &BigUint) -> Result<BigUint, TpmCryptoError> {
-    if low >= high {
-        return Err(TpmCryptoError::InvalidRandomRange);
-    }
-
-    let range = high - low;
-    let bits = range.bits();
-    let byte_len = usize::try_from(bits.div_ceil(8)).unwrap_or(0).max(1);
-    let high_mask = match bits % 8 {
-        0 => 0xff,
-        rem => (1u8 << rem) - 1,
-    };
-    let mut buf = vec![0u8; byte_len];
-    loop {
-        rand_bytes(&mut buf).map_err(TpmCryptoError::Crypto)?;
-        buf[0] &= high_mask;
-        let candidate = BigUint::from_bytes_be(&buf);
-        if candidate < range {
-            return Ok(low + candidate);
-        }
-    }
 }

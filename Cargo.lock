@@ -1073,8 +1073,6 @@ dependencies = [
 name = "tpm2-crypto"
 version = "1.2.3"
 dependencies = [
- "num-bigint",
- "num-traits",
  "openssl",
  "proptest",
  "strum",
