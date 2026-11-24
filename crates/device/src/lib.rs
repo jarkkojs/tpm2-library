@@ -9,7 +9,7 @@ use nix::{
     fcntl,
     poll::{PollFd, PollFlags, poll},
 };
-use rand::{RngCore, thread_rng};
+use openssl::{error::ErrorStack, rand::rand_bytes};
 use std::{
     cell::RefCell,
     fs::{File, OpenOptions},
@@ -25,7 +25,7 @@ use tpm2_crypto::TpmHash;
 use tpm2_protocol::{
     TpmError, TpmWriter,
     basic::{TpmHandle, TpmUint32},
-    constant::{MAX_HANDLES, TPM_MAX_COMMAND_SIZE},
+    constant::{MAX_DIGEST_SIZE, MAX_HANDLES, TPM_MAX_COMMAND_SIZE},
     data::{
         Tpm2bEncryptedSecret, Tpm2bName, Tpm2bNonce, TpmAlgId, TpmCap, TpmCc, TpmEccCurve, TpmHt,
         TpmPt, TpmRc, TpmRcBase, TpmRh, TpmSe, TpmSt, TpmaSession, TpmsAlgProperty,
@@ -56,6 +56,9 @@ pub enum TpmDeviceError {
 
     /// The requested capability is not available from the TPM.
     CapabilityMissing(TpmCap),
+
+    /// A libcrypto operation failed.
+    Crypto(ErrorStack),
 
     /// The operation was interrupted by the caller.
     Interrupted,
@@ -115,6 +118,7 @@ impl PartialEq for TpmDeviceError {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::CapabilityMissing(a), Self::CapabilityMissing(b)) => a == b,
+            (Self::Crypto(a), Self::Crypto(b)) => crypto_error_stack_eq(a, b),
             (Self::InvalidCc(a), Self::InvalidCc(b))
             | (Self::ResponseMismatch(a), Self::ResponseMismatch(b)) => a == b,
             (Self::Io(a), Self::Io(b)) => a.kind() == b.kind(),
@@ -138,6 +142,23 @@ impl PartialEq for TpmDeviceError {
 }
 
 impl Eq for TpmDeviceError {}
+
+fn crypto_error_stack_eq(a: &ErrorStack, b: &ErrorStack) -> bool {
+    a.errors().len() == b.errors().len()
+        && a.errors().iter().zip(b.errors()).all(|(a, b)| {
+            a.code() == b.code()
+                && a.file() == b.file()
+                && a.line() == b.line()
+                && a.function() == b.function()
+                && a.data() == b.data()
+        })
+}
+
+impl From<ErrorStack> for TpmDeviceError {
+    fn from(err: ErrorStack) -> Self {
+        Self::Crypto(err)
+    }
+}
 
 impl From<TpmRc> for TpmDeviceError {
     fn from(rc: TpmRc) -> Self {
@@ -1091,10 +1112,13 @@ impl TpmPolicySessionBuilder {
     ///
     /// # Errors
     ///
+    /// Returns [`Crypto`](crate::TpmDeviceError::Crypto) when libcrypto fails.
     /// Returns [`ResponseMismatch`](crate::TpmDeviceError::ResponseMismatch) if
     /// the TPM response is unexpected.
     /// Returns [`Unmarshal`](crate::TpmDeviceError::Unmarshal) when unmarshal
     /// operation on TPM protocol compliant data fails.
+    /// Returns [`UnsupportedAlgorithm`](crate::TpmDeviceError::UnsupportedAlgorithm)
+    /// when the session hash algorithm is not supported.
     /// Returns other [`TpmDeviceError`](crate::TpmDeviceError) variants depending
     /// on function.
     pub fn open(self, device: &mut TpmDevice) -> Result<TpmPolicySession, TpmDeviceError> {
@@ -1104,9 +1128,9 @@ impl TpmPolicySessionBuilder {
             let digest_len = TpmHash::try_from(self.auth_hash)
                 .map_err(|_| TpmDeviceError::UnsupportedAlgorithm(self.auth_hash))?
                 .size();
-            let mut nonce_bytes = vec![0; digest_len];
-            thread_rng().fill_bytes(&mut nonce_bytes);
-            Tpm2bNonce::try_from(nonce_bytes.as_slice()).map_err(TpmDeviceError::Unmarshal)?
+            let mut nonce_bytes = [0u8; MAX_DIGEST_SIZE];
+            rand_bytes(&mut nonce_bytes[..digest_len]).map_err(TpmDeviceError::Crypto)?;
+            Tpm2bNonce::try_from(&nonce_bytes[..digest_len]).map_err(TpmDeviceError::Unmarshal)?
         };
 
         let cmd = TpmStartAuthSessionCommand {
