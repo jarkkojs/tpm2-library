@@ -1021,7 +1021,7 @@ dependencies = [
 
 [[package]]
 name = "tpm2-crypto"
-version = "1.2.3"
+version = "1.2.4"
 dependencies = [
  "openssl",
  "proptest",
@@ -1031,7 +1031,7 @@ dependencies = [
 
 [[package]]
 name = "tpm2-device"
-version = "1.2.3"
+version = "1.2.4"
 dependencies = [
  "hex",
  "log",
@@ -1046,7 +1046,7 @@ dependencies = [
 
 [[package]]
 name = "tpm2-policy-language"
-version = "1.2.3"
+version = "1.2.4"
 dependencies = [
  "hex",
  "proptest",
@@ -1057,11 +1057,11 @@ dependencies = [
 
 [[package]]
 name = "tpm2-protocol"
-version = "1.2.3"
+version = "1.2.4"
 
 [[package]]
 name = "tpm2-tpmkey"
-version = "1.2.3"
+version = "1.2.4"
 dependencies = [
  "pem",
  "proptest",
@@ -1072,7 +1072,7 @@ dependencies = [
 
 [[package]]
 name = "tpm2-vtpm"
-version = "1.2.3"
+version = "1.2.4"
 dependencies = [
  "log",
  "proptest",
@@ -1084,7 +1084,7 @@ dependencies = [
 
 [[package]]
 name = "tpm2sh"
-version = "1.2.3"
+version = "1.2.4"
 dependencies = [
  "anyhow",
  "argh",
